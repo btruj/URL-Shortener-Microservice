@@ -2,11 +2,38 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const bodyParser = require('body-parser');
+const isUrl = require('is-url');
 
 // Basic Configuration
 const port = process.env.PORT || 3000;
 
+let counter = 0;
+const shortendUrls = {};
+
 app.use(cors());
+
+app.use(bodyParser.urlencoded({ extended: false }));
+
+app.post('/api/shorturl', function(req, res) {
+  const url = req.body.url;
+//check if url is valid
+if (!isUrl(url)) {
+  res.send({ error: 'invalid url'});
+  return;
+}
+
+  counter += 1;
+  shortendUrls[counter] = url;
+  res.send({original_url: req.body.url,
+  short_url: counter});
+})
+
+app.get('/api/shorturl/:id', function(req, res) {
+  const id = req.params.id;
+  const url = shortendUrls[id];
+  res.redirect(url);
+})
 
 app.use('/public', express.static(`${process.cwd()}/public`));
 
